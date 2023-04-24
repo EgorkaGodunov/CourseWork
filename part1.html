@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My game!</title>
+        <script src="js/phaser.min.js"></script>
+        <link rel="preload" as="font" href="assets/Hazio-Regular.ttf" type="font/ttf" />
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+
+    </head>
+    <body>
+        <script>
+ 
+var config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  physics: {
+    default: 'arcade',
+    arcade: {
+        gravity: { y:300},
+        debug: false
+    }
+  }, 
+  scene: {
+    preload: preload,
+    create: create,
+    update: update
+}
+};
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    this.load.image('sky','assets/sky.png');
+    this.load.image('ground','assets/platform.png');
+    this.load.image('star','assets/star.png');
+    this.load.image('bomb','assets/bomb.png');
+    this.load.spritesheet('dude','assets/dude.png',{frameWidth: 32, frameHeight: 48})
+    
+}
+
+var platforms;
+var score = 0;
+var scoreText;
+var letters = ['q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l','z','x','c','v','b','n','m'];
+var stack =[];
+
+function random_symbol(array){
+    return array[Math.floor(Math.random() * (array.length))];
+}
+function loadFont(name, url) {
+    var newFont = new FontFace(name, `url(${url})`);
+    newFont.load().then(function (loaded) {
+        document.fonts.add(loaded);
+    }).catch(function (error) {
+        return error;
+    });
+}
+loadFont("Akshar-Regular", "assets/Akshar-Regular.ttf");
+function create ()
+{
+  this.add.image(400, 300, 'sky');
+  platforms = this.physics.add.staticGroup();
+  var keys = this.input.keyboard.on('keydown', action);
+  for (let i = 0; i < 10; i++) {
+    stack.push(random_symbol(letters));
+  }
+  scoreText = this.add.text(16, 300, (''+stack).replaceAll(',',''), { fontSize: '96px', fill: '#000'});
+}
+  
+
+
+function action(keys){
+    if(keys.key == stack[0]){
+        stack.shift();
+        scoreText.setText((''+stack).replaceAll(',',''));
+        stack.push(random_symbol(letters))
+    }
+}
+
+function update ()
+{
+
+
+
+}
+        </script>
+    </body>
+</html>
