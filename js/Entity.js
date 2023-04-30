@@ -35,5 +35,17 @@ class Player extends Entity{
 class CommonPlatform extends Entity{
     constructor(scene, x, y, key){
         super(scene, x, y, key, "CommonPlatform");
+        this.body.setImmovable(true);
+    }
+
+    update(){
+        this.body.velocity.x = 10
+    }
+    getData(){
+        return {
+            x: this.x,
+            y: this.y,
+            key: this.key
+        }
     }
 }
