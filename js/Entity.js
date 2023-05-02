@@ -12,22 +12,34 @@ class Player extends Entity{
     constructor(scene, x, y, key){
         super(scene, x, y, key, "Player");
         this.setData("jump_hight",200);
+        this.setData("angle",{x1:0,x2:0,y1:0,y2:0})
+        this.body.setBounce(0.3)
+
+        this.setPosition(this.scene.game.config.width/2,700)
+        
+        // let x = 100 * Math.sin(angle)
+        // let y = 100 * Math.cos(angle)
+        // console.log(x,y)
+
+        // this.body.setVelocity(x,y)
+        // .on('dragstart', function(pointer, dragX, dragY){
+        //     // console.log(pointer, dragX, dragY)
+
+        // })
+        // .on('drag', function(pointer, dragX, dragY){
+        //     // gameObject.setPosition(dragX, dragY);
+        // })
     }
     moveUp() {
-        this.body.velocity.y = -this.getData("jump_hight");
-    }
-    moveDown() {
-        this.body.velocity.y = this.getData("jump_hight");
+        this.body.setVelocityY(-this.getData("jump_hight"));
     }
     moveLeft() {
-        this.body.velocity.x = -this.getData("jump_hight");
+        this.body.setVelocityX(-this.getData("jump_hight"));
     }
     moveRight() {
-        this.body.velocity.x = this.getData("jump_hight");
+        this.body.setVelocityX(this.getData("jump_hight"));
     }
     update(){
-        this.body.setVelocity(0, 0);
-
         this.x = Phaser.Math.Clamp(this.x, 0, this.scene.game.config.width);
         this.y = Phaser.Math.Clamp(this.y, 0, this.scene.game.config.height);
     }
@@ -36,6 +48,7 @@ class CommonPlatform extends Entity{
     constructor(scene, x, y, key){
         super(scene, x, y, key, "CommonPlatform");
         this.body.setImmovable(true);
+        
     }
 
     update(){
