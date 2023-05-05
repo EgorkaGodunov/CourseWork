@@ -33,6 +33,9 @@ class Player extends Entity{
     moveUp() {
         this.body.setVelocityY(-this.getData("jump_hight"));
     }
+    moveDown() {
+        this.body.setVelocityY(this.getData("jump_hight"));
+    }
     moveLeft() {
         this.body.setVelocityX(-this.getData("jump_hight"));
     }
