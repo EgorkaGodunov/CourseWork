@@ -1,7 +1,17 @@
 class MainScene extends Phaser.Scene
 {
   constructor() {
-      super({ key: "MainScene" });
+      super({ key: "MainScene",
+      physics: {
+        arcade: {
+            debug: true,
+            gravity: { y: 50 }
+        },
+        matter: {
+            debug: true,
+            gravity: { y: 0.5 }
+        }
+    } });
     }
     preload(){
       this.load.image('ground',"assets/ground.png");
@@ -12,25 +22,32 @@ class MainScene extends Phaser.Scene
    
     
     create() {
+      const wrapBounds = {
+        wrap: {
+            min: { x: 0},
+            max: { x: 600}
+        }
+    };
       this.add.image(0,0,'sky').setOrigin(0)
       this.cameras.main.setBounds(0, 0, 600, 1800)
       this.matter.world.setBounds(0, 0, 600, 1800)
-      this.player = this.matter.add.sprite(this.game.config.width *0.5,300,'sprite_player')
-      this.player.setFixedRotation()
-      this.player.setBounce(1)
+      // this.player.setCollideWorldBounds(true);
+      // this.player.onWorldBounds = true;
+      this.player = this.physics.add.image(this.game.config.width *0.5,300,'sprite_player', null,{plugin: wrapBounds}).setScale(3)
+      // this.player.setFixedRotation()
+      this.player.setBounce(0.1)
       
       this.cameras.main.startFollow(this.player, true, 0.05, 0.05);
 
 
       this.checker = true
+      this.height = 500
       this.keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
       this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
       this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
       this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
       this.keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
       this.keyZ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
-
-
       this.pointer
       
       // this.platforms = this.matter.add.group({
@@ -47,54 +64,62 @@ class MainScene extends Phaser.Scene
       this.player.setPosition(300,700)
       this.player.setInteractive({ draggable: true })
       .on('dragend', function(pointer, dragX, dragY, dropped){
-          let angle = Math.atan( (dragY-0) / (dragX-0) ) * 180 / Math.PI
+          let angle = Math.round(Math.atan( (dragY-0) / (dragX-0) ) * 180 / Math.PI)
           // if(dragX<=0 && dragY <=0){
-          //     angle = 270+angle
-          //     console.log(angle)
-          //     this.physics.velocityFromAngle(angle, 300, this.player.body.velocity);
+              // angle = 270+angle
+              console.log(angle, dragX,dragY)
+              // this.setVelocityX(5 * Math.cos(angle));
+              // this.setVelocityY(5 * Math.sin(angle));
           // }else if(dragX>=0 && dragY <=0){
-          //     angle = 90+angle
-          //     console.log(angle)
-          //     this.physics.velocityFromAngle(angle, 300, this.player.body.velocity);
+            //   angle = 90+angle
+            //   console.log(angle)
+            //   this.setVelocityX(5 * Math.cos(320));
+            // this.setVelocityY(5 * Math.sin(320));
           // }
-          console.log(angle)
-          
-      });
+          // console.log(angle)
+        });
+        for(let x =0;x<20;x++){
+          this.platform_create()
 
+        }
 
       // this.physics.add.collider(this.player,this.platforms, this.platform_collision, null, this);
       this.text = this.add.text(10, 10, 'Cursors to move', { font: '16px Courier', fill: '#00ff00' }).setScrollFactor(0);
 
     }
     
-    platform_collision(a,b){
+    platform_create(){
       let x = Math.random() * this.sys.canvas.width
-      let y = Math.random() * this.sys.canvas.height
+      let platform = this.matter.add.sprite(x,400+this.height,'ground').setStatic(true)
+      platform.width = 900
+      this.height -= 100
     }
     
     update(){
-      // this.player.update();
       // && this.player.body.touching.down
       if (this.keyW.isDown) {
-          this.player.setVelocityY(-10);
+          this.player.setVelocityY(-50);
       }
       else if (this.keyS.isDown) {
-        this.player.setVelocityY(10);
+        this.player.setVelocityY(50);
       }
       if (this.keyA.isDown) {
-        this.player.setVelocityX(-10);
+        this.player.setVelocityX(-50);
       }
       else if (this.keyD.isDown) {
-        this.player.setVelocityX(10);
+        this.player.setVelocityX(50);
       }else{
           // this.player.body.setVelocityX(0);
       }
       if(this.keyE.isDown){
-        this.player.setAngularVelocity(5)
+        let angle = 300
+        this.player.setAngle(angle)
+        this.physics.velocityFromAngle(angle, 100, this.player.body.velocity);
       }
       if(this.keyZ.isDown){
         this.player.setVelocity(0,0)
-        this.player.setPosition(this.game.config.width *0.5,700)
+        console.log(this.player.x,this.player.y)
+        // this.player.setPosition(this.game.config.width *0.5, 700)
       }
       this.cameras.main.setBounds(0, this.player.y-400, 600, 1200)
       this.matter.world.setBounds(0, this.player.y+800, 600, 1200)

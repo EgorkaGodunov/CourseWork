@@ -4,11 +4,18 @@ var config = {
   height: 800,
   bachgroundColor: "Black",
   physics: {
-    default: 'matter',
+    // default: 'matter',
+    arcade: {
+      debug: true,
+      gravity: { y: 0,x: 0 }
+    },
     matter: {
       gravity: {x:0,y:0},
-      debug: true
-  }
+      debug: true,
+      plugins: {
+        wrap: true
+      },
+    },
   }, 
   scene: [
     MainMenuScene,
@@ -20,3 +27,4 @@ var config = {
 };
 var game = new Phaser.Game(config);
 
+  
