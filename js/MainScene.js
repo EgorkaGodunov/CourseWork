@@ -33,7 +33,7 @@ class MainScene extends Phaser.Scene
       this.matter.world.setBounds(0, 0, 600, 1800)
       // this.player.setCollideWorldBounds(true);
       // this.player.onWorldBounds = true;
-      this.player = this.physics.add.image(this.game.config.width *0.5,300,'sprite_player', null,{plugin: wrapBounds}).setScale(3)
+      this.player = this.physics.add.image(this.game.config.width *0.5,300,'sprite_player').setScale(3)
       // this.player.setFixedRotation()
       this.player.setBounce(0.1)
       
@@ -42,6 +42,7 @@ class MainScene extends Phaser.Scene
 
       this.checker = true
       this.height = 500
+      this.playerHeight = this.player.displayHeight
       this.keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
       this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
       this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -49,13 +50,13 @@ class MainScene extends Phaser.Scene
       this.keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
       this.keyZ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
       this.pointer
-      
-      // this.platforms = this.matter.add.group({
-      //   key: 'ground',
-      //   repeat: 9,
-      //   immovable: true,
-      //   setXY: { x: 0, y: 0, stepX: 60 },
-      // })
+      console.log(this.player)
+
+      this.platforms = this.physics.add.staticGroup({
+        key: 'ground',
+        repeat: 19,
+        setXY: { x: 15, y: 800, stepX: 30 },
+      })
       // this.platforms.children.each(function(child){
       //   child.setScale(2)
       //   child.setOrigin(0,0)
@@ -64,26 +65,23 @@ class MainScene extends Phaser.Scene
       this.player.setPosition(300,700)
       this.player.setInteractive({ draggable: true })
       .on('dragend', function(pointer, dragX, dragY, dropped){
-          let angle = Math.round(Math.atan( (dragY-0) / (dragX-0) ) * 180 / Math.PI)
-          // if(dragX<=0 && dragY <=0){
-              // angle = 270+angle
-              console.log(angle, dragX,dragY)
-              // this.setVelocityX(5 * Math.cos(angle));
-              // this.setVelocityY(5 * Math.sin(angle));
-          // }else if(dragX>=0 && dragY <=0){
-            //   angle = 90+angle
-            //   console.log(angle)
-            //   this.setVelocityX(5 * Math.cos(320));
-            // this.setVelocityY(5 * Math.sin(320));
-          // }
-          // console.log(angle)
+          let angle = Math.round(Math.atan( (dragY-6) / (dragX-0) ) * 180 / Math.PI)
+          if(dragX<=0 && dragY <=0){
+              angle = 180+angle
+              this.physics.velocityFromAngle(angle, 100, this.player.body.velocity);
+            
+          }else if(dragX>=0 && dragY <=0){
+              angle = 360+angle
+              this.physics.velocityFromAngle(angle, 100, this.player.body.velocity);
+
+          }
         });
         for(let x =0;x<20;x++){
           this.platform_create()
 
         }
 
-      // this.physics.add.collider(this.player,this.platforms, this.platform_collision, null, this);
+      this.physics.add.collider(this.player,this.platforms, this.platform_collision, null, this);
       this.text = this.add.text(10, 10, 'Cursors to move', { font: '16px Courier', fill: '#00ff00' }).setScrollFactor(0);
 
     }
@@ -98,7 +96,7 @@ class MainScene extends Phaser.Scene
     update(){
       // && this.player.body.touching.down
       if (this.keyW.isDown) {
-          this.player.setVelocityY(-50);
+        this.player.setVelocityY(-50);
       }
       else if (this.keyS.isDown) {
         this.player.setVelocityY(50);
@@ -112,9 +110,7 @@ class MainScene extends Phaser.Scene
           // this.player.body.setVelocityX(0);
       }
       if(this.keyE.isDown){
-        let angle = 300
-        this.player.setAngle(angle)
-        this.physics.velocityFromAngle(angle, 100, this.player.body.velocity);
+        
       }
       if(this.keyZ.isDown){
         this.player.setVelocity(0,0)
