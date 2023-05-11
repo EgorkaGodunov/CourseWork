@@ -22,13 +22,13 @@ class MainScene extends Phaser.Scene
    
     
     create() {
-      this.add.image(0,0,'sky').setOrigin(0)
+      this.add.image(0,100,'sky').setOrigin(0)
       this.cameras.main.setBounds(0, 0, 600, 1800)
       this.matter.world.setBounds(0, 0, 600, 1800)
 
       this.player = this.physics.add.image(this.game.config.width *0.5,300,'sprite_player').setScale(3)
-      this.player.setBounce(0.3)
-      this.player.setPosition(300,700)
+      this.player.setBounce(0.2)
+      this.player.setPosition(300,0)
       this.player.setFrictionX(0)
 
       this.cameras.main.startFollow(this.player, true, 0.05, 0.05);
@@ -36,7 +36,9 @@ class MainScene extends Phaser.Scene
 
 
       this.checker = true
-      this.height = 500
+      this.height = 100
+      this.score = 0
+      this.maxScore = 0
       this.playerHeight = this.player.displayHeight
       this.gameWidth, this.gameHeiht = this.sys.game.canvas
       this.keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -44,24 +46,20 @@ class MainScene extends Phaser.Scene
       this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
       this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
       this.keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
-      this.keyZ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+      this.keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
       this.pointer = this.input.activePointer;
       this.pointerX1
       this.pointerY1
       console.log(this.player)
-
+      this.slipperyPlatforms = this.physics.add.staticGroup()
       this.platforms = this.physics.add.staticGroup({
         key: 'ground',
         repeat: 19,
-        setXY: { x: 15, y: 800, stepX: 30 },
+        setXY: { x: 15, y: 28, stepX: 30 },
       })
-      // this.platforms.children.each(function(child){
-      //   child.setScale(2)
-      //   child.setOrigin(0,0)
-      //   child.refreshBody()
-      // })
+      
       for(let x =0;x<20;x++){
-        this.platform_create()
+        this.platform_create(1,'common')
 
       }
       
@@ -70,48 +68,90 @@ class MainScene extends Phaser.Scene
         this.pointerY1 = this.pointer.y
       },this)
       this.input.on('pointerup',function(){
-        console.log(this.pointerX1,this.pointerY1,this.pointer.x,this.pointer.y)
         let angle = Math.round(Math.atan( (this.pointer.y-this.pointerY1) / (this.pointer.x-this.pointerX1) ) * 180 / Math.PI)
         if(!isNaN(angle) && this.player.body.touching.down){
           if(this.pointer.x<=this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 180+angle
-            console.log(angle)
             this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
-            
           }else if(this.pointer.x >= this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 360+angle
-            console.log(angle)
             this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
 
           }
         }
+        this.checker = true
 
       },this)
 
 
         
-        
+      
 
-      this.physics.add.collider(this.player,this.platforms, this.platform_collision, null, this);
+      this.physics.add.collider(this.player,this.platforms, function(player,platform){
+        // Friction ----
+        this.player.setDragX(1000);
+        // ----
+       this.onceCreator(platform)
+        
+      }, null, this);
+      this.physics.add.collider(this.player,this.slipperyPlatforms,function(player,platform){
+        // Friction ----
+        this.player.setDragX(20);
+        // ----
+
+        this.onceCreator(platform)
+
+      },null, this)
+
       this.text = this.add.text(10, 10, 'Cursors to move', { font: '16px Courier', fill: '#00ff00' }).setScrollFactor(0);
 
     }
-    platform_collision(){
+    onceCreator(platform){
+      let chance =  Math.floor(Math.random() * 10)
+      if(chance<=5){
+        if(platform.getData('counter')>0){
+          this.platform_create(2,'slippery')
+          platform.setData('counter',0)
+        }
+      }else{
+        if(platform.getData('counter')>0){
+          this.platform_create(2,'common')
+          platform.setData('counter',0)
+        }
+        
+      }
+
       if(this.checker){
-        this.player.setDragX(1000);
-        console.log(this.checker)
+        console.log(11)
+        this.checker = false
       }
     }
-    platform_create(){
-      let x = Math.random() * this.sys.canvas.width
-      this.platforms.create(x,200+this.height,'ground')
-      this.platforms.getChildren().at(-1).body.checkCollision.down = false
-      this.platforms.getChildren().at(-1).body.checkCollision.left = false
-      this.platforms.getChildren().at(-1).body.checkCollision.right = false
-      this.platforms.getChildren().at(-1).setScale(6,1).refreshBody()
+    platform_create(number,group){
+      for(let j = 0;j<number;j+=1){
 
+        let x = Math.random() * this.sys.canvas.width
+        if(group=='common'){
 
-      this.height -= 100
+          this.platforms.create(x,0-this.height,'ground')
+          this.platforms.getChildren().at(-1).body.checkCollision.down = false
+          this.platforms.getChildren().at(-1).body.checkCollision.left = false
+          this.platforms.getChildren().at(-1).body.checkCollision.right = false
+          this.platforms.getChildren().at(-1).setData('counter',1)
+          this.platforms.getChildren().at(-1).setScale(6,1).refreshBody()
+        }else if(group == 'slippery'){
+          this.slipperyPlatforms.create(x,0-this.height,'ground')
+          this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.down = false
+          this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.left = false
+          this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.right = false
+          this.slipperyPlatforms.getChildren().at(-1).setData('counter',1)
+          this.slipperyPlatforms.getChildren().at(-1).setTint(0x0000ff)
+          this.slipperyPlatforms.getChildren().at(-1).setScale(6,1).refreshBody()
+        }
+        
+        
+        this.height += 100
+        console.log("created")
+      }
     }
     
     update(){
@@ -122,26 +162,28 @@ class MainScene extends Phaser.Scene
         this.player.setPosition(0 - this.player.width + 1 ,this.player.y)
       }
       // -----
-      // Friction ----
       if(!this.player.body.touching.down){
         this.player.setDragX(0)
 
+
       }
-      // ----
       if(this.keyE.isDown){
+        console.log(this.platforms.getChildren().length)
       }
-      if(this.keyZ.isDown){
-        this.player.setVelocity(0,0)
-        console.log(this.player.x,this.player.y)
+      if(this.keyR.isDown){
+        this.scene.restart("MainScene")
       }
       this.cameras.main.setBounds(0, this.player.y-400, 600, 1200)
       this.matter.world.setBounds(0, this.player.y+800, 600, 1800)
-
+      this.score = -Math.round(this.player.y)
+      if(this.score>this.maxScore){
+        this.maxScore = this.score
+      }
       this.text.setText([
-        `screen x: ${this.input.x}`,
-        `screen y: ${this.input.y}`,
-        `world x: ${this.input.mousePointer.worldX}`,
-        `world y: ${this.input.mousePointer.worldY}`
+        
+        `Score: ${this.score}`,
+        `Highest score: ${this.maxScore}`
+
     ]);
     
     }
