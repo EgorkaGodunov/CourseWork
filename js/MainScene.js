@@ -9,7 +9,7 @@ class MainScene extends Phaser.Scene
         },
         matter: {
             debug: true,
-            gravity: { y: 0.5 }
+            // gravity: { y: 0.5 }
         }
     } });
     }
@@ -22,21 +22,15 @@ class MainScene extends Phaser.Scene
    
     
     create() {
-      const wrapBounds = {
-        wrap: {
-            min: { x: 0},
-            max: { x: 600}
-        }
-      };
       this.add.image(0,0,'sky').setOrigin(0)
       this.cameras.main.setBounds(0, 0, 600, 1800)
       this.matter.world.setBounds(0, 0, 600, 1800)
-      // this.player.setCollideWorldBounds(true);
-      // this.player.onWorldBounds = true;
+
       this.player = this.physics.add.image(this.game.config.width *0.5,300,'sprite_player').setScale(3)
-      // this.player.setFixedRotation()
-      this.player.setBounce(0.1)
-      
+      this.player.setBounce(0.3)
+      this.player.setPosition(300,700)
+      this.player.setFrictionX(0)
+
       this.cameras.main.startFollow(this.player, true, 0.05, 0.05);
       this.cameras.main.followOffset.set(0, 130);
 
@@ -44,6 +38,7 @@ class MainScene extends Phaser.Scene
       this.checker = true
       this.height = 500
       this.playerHeight = this.player.displayHeight
+      this.gameWidth, this.gameHeiht = this.sys.game.canvas
       this.keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
       this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
       this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -69,8 +64,7 @@ class MainScene extends Phaser.Scene
         this.platform_create()
 
       }
-      this.player.setPosition(300,700)
-      this.player.setFrictionX(0)
+      
       this.input.on('pointerdown',function(){
         this.pointerX1 = this.pointer.x
         this.pointerY1 = this.pointer.y
@@ -82,15 +76,16 @@ class MainScene extends Phaser.Scene
           if(this.pointer.x<=this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 180+angle
             console.log(angle)
-            this.physics.velocityFromAngle(angle, 300, this.player.body.velocity);
+            this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
             
           }else if(this.pointer.x >= this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 360+angle
             console.log(angle)
-            this.physics.velocityFromAngle(angle, 300, this.player.body.velocity);
+            this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
 
           }
         }
+
       },this)
 
 
@@ -102,45 +97,45 @@ class MainScene extends Phaser.Scene
 
     }
     platform_collision(){
-      this.player.setDragX(400);
+      if(this.checker){
+        this.player.setDragX(1000);
+        console.log(this.checker)
+      }
     }
     platform_create(){
       let x = Math.random() * this.sys.canvas.width
-      let platform = this.matter.add.sprite(x,400+this.height,'ground').setStatic(true)
-      platform.width = 900
+      this.platforms.create(x,200+this.height,'ground')
+      this.platforms.getChildren().at(-1).body.checkCollision.down = false
+      this.platforms.getChildren().at(-1).body.checkCollision.left = false
+      this.platforms.getChildren().at(-1).body.checkCollision.right = false
+      this.platforms.getChildren().at(-1).setScale(6,1).refreshBody()
+
+
       this.height -= 100
     }
     
     update(){
-      this.physics.world.wrap(this.player,50);
+      // wrap -----
+      if(this.player.x <= 0 - this.player.width){
+        this.player.setPosition( 600 + this.player.width - 1 ,this.player.y)
+      }else if(this.player.x >= 600 + this.player.width){
+        this.player.setPosition(0 - this.player.width + 1 ,this.player.y)
+      }
+      // -----
+      // Friction ----
       if(!this.player.body.touching.down){
         this.player.setDragX(0)
-      }
-      if (this.keyW.isDown) {
-        this.player.setVelocityY(-50);
-      }
-      else if (this.keyS.isDown) {
-        this.player.setVelocityY(50);
-      }
-      if (this.keyA.isDown) {
-        this.player.setVelocityX(-50);
-      }
-      else if (this.keyD.isDown) {
-        this.player.setVelocityX(50);
-      }else{
-          // this.player.body.setVelocityX(0);
-      }
-      if(this.keyE.isDown){
-          this.physics.velocityFromAngle(280, 300, this.player.body.velocity);
 
+      }
+      // ----
+      if(this.keyE.isDown){
       }
       if(this.keyZ.isDown){
         this.player.setVelocity(0,0)
         console.log(this.player.x,this.player.y)
-        // this.player.setPosition(this.game.config.width *0.5, 700)
       }
-      this.cameras.main.setBounds(0, this.player.y-700, 600, 1200)
-      this.matter.world.setBounds(0, this.player.y+800, 600, 1200)
+      this.cameras.main.setBounds(0, this.player.y-400, 600, 1200)
+      this.matter.world.setBounds(0, this.player.y+800, 600, 1800)
 
       this.text.setText([
         `screen x: ${this.input.x}`,
