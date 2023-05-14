@@ -13,24 +13,48 @@ class MainScene extends Phaser.Scene
         }
     } });
     }
+    randomInteger(min, max) {
+      let rand = min - 0.5 + Math.random() * (max - min + 1);
+      return Math.round(rand);
+    }
     preload(){
       this.load.image('ground',"assets/ground.png");
       this.load.image('sprite_player', 'assets/slime.png');
-      this.load.image('sky',"assets/sky.png")
+      this.load.image('background','assets/background.png')
+      this.load.image('deadzone','assets/deadzone.png')
+      this.load.spritesheet('star','assets/star.png',{frameWidth: 9, frameheight: 9})
+
     }
     
-   
+    createStar(x,y){
+      this.stars.create(x,y,'star')
+      this.stars.getChildren().at(-1).play('blic')
+    }
     
     create() {
-      this.add.image(0,100,'sky').setOrigin(0)
+      const config = {
+        key: 'blic',
+        frames: this.anims.generateFrameNumbers('star'),
+        frameRate: 3,
+        repeat: -1
+    };
+
+      this.anim = this.anims.create(config);
+   
+      this.stars = this.physics.add.staticGroup()
+      
       this.cameras.main.setBounds(0, 0, 600, 1800)
       this.matter.world.setBounds(0, 0, 600, 1800)
-
+      
       this.player = this.physics.add.image(this.game.config.width *0.5,300,'sprite_player').setScale(3)
       this.player.setBounce(0.2)
-      this.player.setPosition(300,0)
-      this.player.setFrictionX(0)
+      .setPosition(300,0)
+      .setFrictionX(0)
 
+      this.player.depth = 10
+      
+      this.deadzone = this.physics.add.image(0,this.player.y+700,'deadzone').setDepth(11).setScale(10,1).setOrigin(0)
+      this.deadzone.body.allowGravity = false
       this.cameras.main.startFollow(this.player, true, 0.05, 0.05);
       this.cameras.main.followOffset.set(0, 130);
 
@@ -47,6 +71,8 @@ class MainScene extends Phaser.Scene
       this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
       this.keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
       this.keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+      this.keyESC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
       this.pointer = this.input.activePointer;
       this.pointerX1
       this.pointerY1
@@ -60,7 +86,13 @@ class MainScene extends Phaser.Scene
       
       for(let x =0;x<20;x++){
         this.platform_create(1,'common')
+      }
+      for(let i = 0; i<20;i++){
+        let x = this.randomInteger(20,580)
+        let y = this.randomInteger(this.player.y+100,this.player.y-2000)
 
+        this.stars.create(x,y,'star')
+        this.stars.getChildren().at(-1).setDepth(0).play('blic')
       }
       
       this.input.on('pointerdown',function(){
@@ -102,6 +134,20 @@ class MainScene extends Phaser.Scene
         this.onceCreator(platform)
 
       },null, this)
+      this.physics.add.overlap(this.deadzone,this.stars,function(deadzone,star){
+        star.destroy()
+      },null,this)
+      this.physics.add.overlap(this.deadzone,this.player,function(deadzone,player){
+        
+        // player.destroy()
+        this.scene.switch('GameOverScene');
+
+
+      },null,this)
+      this.physics.add.overlap(this.deadzone,this.platforms,function(deadzone,platform){
+        platform.destroy()
+
+      },null,this)
 
       this.text = this.add.text(10, 10, 'Cursors to move', { font: '16px Courier', fill: '#00ff00' }).setScrollFactor(0);
 
@@ -122,7 +168,6 @@ class MainScene extends Phaser.Scene
       }
 
       if(this.checker){
-        console.log(11)
         this.checker = false
       }
     }
@@ -133,28 +178,59 @@ class MainScene extends Phaser.Scene
         if(group=='common'){
 
           this.platforms.create(x,0-this.height,'ground')
+          .setDepth(1)
+          .setData('counter',1)
+          .setScale(6,1)
+          .refreshBody()
           this.platforms.getChildren().at(-1).body.checkCollision.down = false
           this.platforms.getChildren().at(-1).body.checkCollision.left = false
           this.platforms.getChildren().at(-1).body.checkCollision.right = false
-          this.platforms.getChildren().at(-1).setData('counter',1)
-          this.platforms.getChildren().at(-1).setScale(6,1).refreshBody()
+      
+
+          this.createStar(this.randomInteger(20,580),this.randomInteger(-this.height-50,-this.height+50))
+
         }else if(group == 'slippery'){
           this.slipperyPlatforms.create(x,0-this.height,'ground')
+          .setDepth(1)
+          .setData('counter',1)
+          .setTint(0x0000ff)
+          .setScale(6,1)
+          .refreshBody()
           this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.down = false
           this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.left = false
           this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.right = false
-          this.slipperyPlatforms.getChildren().at(-1).setData('counter',1)
-          this.slipperyPlatforms.getChildren().at(-1).setTint(0x0000ff)
-          this.slipperyPlatforms.getChildren().at(-1).setScale(6,1).refreshBody()
+   
+          this.createStar(this.randomInteger(20,580),this.randomInteger(-this.height-50,-this.height+50))
+
         }
         
         
         this.height += 100
-        console.log("created")
       }
     }
     
     update(){
+      // stars ----
+      if(this.player.body.velocity.y>1){
+        this.stars.children.each(function(stars){
+          stars.y -=this.player.body.velocity.y*0.001
+          stars.refreshBody().setDepth(0)
+        },this)
+      }else if(this.player.body.velocity.y<-1){
+        this.stars.children.each(function(stars){
+          stars.y -=this.player.body.velocity.y*0.001
+          stars.refreshBody().setDepth(0)
+
+        },this)
+      }
+      this.stars.children.each(function(stars){
+        if(stars.y<this.player.y+1000){
+          stars
+        }
+      },this)
+      // ----
+      // deadzone ----
+      // ----
       // wrap -----
       if(this.player.x <= 0 - this.player.width){
         this.player.setPosition( 600 + this.player.width - 1 ,this.player.y)
@@ -164,20 +240,26 @@ class MainScene extends Phaser.Scene
       // -----
       if(!this.player.body.touching.down){
         this.player.setDragX(0)
-
-
       }
+
       if(this.keyE.isDown){
         console.log(this.platforms.getChildren().length)
       }
       if(this.keyR.isDown){
         this.scene.restart("MainScene")
       }
-      this.cameras.main.setBounds(0, this.player.y-400, 600, 1200)
+      if(this.keyESC.isDown){
+        this.scene.start('MainMenuScene');
+        
+      }
+      this.cameras.main.setBounds(0, this.player.y-600, 600, 1200)
       this.matter.world.setBounds(0, this.player.y+800, 600, 1800)
+
       this.score = -Math.round(this.player.y)
       if(this.score>this.maxScore){
         this.maxScore = this.score
+        
+        this.deadzone.setPosition(0,-this.maxScore+1000)
       }
       this.text.setText([
         
