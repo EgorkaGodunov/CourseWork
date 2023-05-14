@@ -9,7 +9,6 @@ class MainScene extends Phaser.Scene
         },
         matter: {
             debug: true,
-            // gravity: { y: 0.5 }
         }
     } });
     }
@@ -60,6 +59,7 @@ class MainScene extends Phaser.Scene
 
 
       this.checker = true
+      this.checker2 = false
       this.height = 100
       this.score = 0
       this.maxScore = 0
@@ -98,10 +98,12 @@ class MainScene extends Phaser.Scene
       this.input.on('pointerdown',function(){
         this.pointerX1 = this.pointer.x
         this.pointerY1 = this.pointer.y
+        this.checker2 = true
       },this)
       this.input.on('pointerup',function(){
         let angle = Math.round(Math.atan( (this.pointer.y-this.pointerY1) / (this.pointer.x-this.pointerX1) ) * 180 / Math.PI)
-        if(!isNaN(angle) && this.player.body.touching.down){
+        if(!isNaN(angle) && this.player.body.touching.down && this.checker2 == true){
+          this.checker2 = false
           if(this.pointer.x<=this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 180+angle
             this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
@@ -140,7 +142,8 @@ class MainScene extends Phaser.Scene
       this.physics.add.overlap(this.deadzone,this.player,function(deadzone,player){
         
         // player.destroy()
-        this.scene.switch('GameOverScene');
+        
+        this.scene.start('GameOverScene',{data: this.maxScore});
 
 
       },null,this)
@@ -259,7 +262,7 @@ class MainScene extends Phaser.Scene
       if(this.score>this.maxScore){
         this.maxScore = this.score
         
-        this.deadzone.setPosition(0,-this.maxScore+1000)
+        this.deadzone.setPosition(0,-this.maxScore+700)
       }
       this.text.setText([
         

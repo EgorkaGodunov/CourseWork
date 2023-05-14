@@ -67,6 +67,7 @@ class MainMenuScene extends Phaser.Scene
           if(gameObject.texture.key == 'start_dark'){
             this.startButton.setTexture('start_light')
           }else{
+            
             this.optionButton.setTexture('option_light')
           }
         },this)

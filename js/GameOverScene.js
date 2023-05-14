@@ -7,9 +7,13 @@ class GameOverScene extends Phaser.Scene
         let rand = min - 0.5 + Math.random() * (max - min + 1);
         return Math.round(rand);
       }
+     
+      init(data){
+        this.maxScore = data.data;
+      }
       preload(){
-        this.load.image('start_light','assets/button_start_light.png')
-        this.load.image('start_dark','assets/button_start_dark.png')
+        this.load.image('again_light','assets/button_again_light.png')
+        this.load.image('again_dark','assets/button_again_dark.png')
 
         this.load.image('background','assets/background.png')
         this.load.spritesheet('star','assets/star.png',{frameWidth: 9, frameheight: 9})
@@ -17,6 +21,9 @@ class GameOverScene extends Phaser.Scene
 
       }
       create() {
+        
+        this.text = this.add.text(this.game.config.width *0.5, this.game.config.height *0.5, `Highest score: ${this.maxScore}`, { font: '32px Courier', fill: '#00ff00' }).setOrigin(0.5, 0.5);
+
         const config = {
           key: 'blic',
           frames: this.anims.generateFrameNumbers('star'),
@@ -35,13 +42,13 @@ class GameOverScene extends Phaser.Scene
         }
         this.checker = true
         this.scale = 3
-        this.startButton = this.add.image(this.game.config.width * 0.5, this.game.config.height * 0.20,'start_light').setScale(this.scale).setInteractive().on('pointerdown',function(){
+        this.againButton = this.add.image(this.game.config.width * 0.5, this.game.config.height * 0.20,'again_light').setScale(this.scale).setInteractive().on('pointerdown',function(){
           this.scene.start("MainScene")
         },this)
         this.input.on('gameobjectmove',function(pointer, gameObject){
           if(this.checker){
-            if(gameObject.texture.key == 'start_light'){
-              this.startButton.setTexture('start_dark')
+            if(gameObject.texture.key == 'again_light'){
+              this.againButton.setTexture('again_dark')
             }
             this.checker = false
 
@@ -50,8 +57,8 @@ class GameOverScene extends Phaser.Scene
 
         this.input.on('gameobjectout',function(pointer, gameObject){
           this.checker = true
-          if(gameObject.texture.key == 'start_dark'){
-            this.startButton.setTexture('start_light')
+          if(gameObject.texture.key == 'again_dark'){
+            this.againButton.setTexture('again_light')
           }
         },this)
 
