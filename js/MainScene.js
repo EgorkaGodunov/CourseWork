@@ -18,9 +18,11 @@ class MainScene extends Phaser.Scene
     }
     preload(){
       this.load.image('ground',"assets/ground.png");
+      this.load.image('ground_fill',"assets/ground_fill.png");
+
       this.load.image('ice',"assets/ice.png");
 
-      this.load.image('sprite_player', 'assets/slime.png');
+      this.load.spritesheet('sprite_player', 'assets/cosmonaut.png',{frameWidth: 12, frameheight: 12});
       this.load.image('background','assets/background.png')
       this.load.image('deadzone','assets/deadzone.png')
       this.load.spritesheet('star','assets/star.png',{frameWidth: 9, frameheight: 9})
@@ -33,27 +35,50 @@ class MainScene extends Phaser.Scene
     }
     
     create() {
-      const config = {
+      const configStar = {
         key: 'blic',
         frames: this.anims.generateFrameNumbers('star'),
         frameRate: 3,
         repeat: -1
     };
+    const configPlayer1 = {
+      key: 'stay',
+      frames: this.anims.generateFrameNumbers('sprite_player',{ frames: [ 0, 1]}),
+      frameRate: 3,
+      yoyo: true,
+      repeat: -1
+    };
+    const configPlayer2 = {
+      key: 'prejump',
+      yoyo: true,
+      frames: this.anims.generateFrameNumbers('sprite_player',{ frames: [ 2,3]}),
+      frameRate: 6,
+      repeat: -1
 
-      this.anim = this.anims.create(config);
-   
+    };
+    const configPlayer3 = {
+      key: 'jump',
+      frames: this.anims.generateFrameNumbers('sprite_player',{ frames: [ 4,5]}),
+      frameRate: 6,
+    };
+
+      this.anim = this.anims.create(configStar);
+      this.anims.create(configPlayer1)
+      this.anims.create(configPlayer2)
+      this.anims.create(configPlayer3)
+
+      
       this.stars = this.physics.add.staticGroup()
       
       this.cameras.main.setBounds(0, 0, 600, 1800)
       this.matter.world.setBounds(0, 0, 600, 1800)
       
-      this.player = this.physics.add.image(this.game.config.width *0.5,300,'sprite_player').setScale(3)
+      this.player = this.physics.add.sprite(this.game.config.width *0.5,-10,'sprite_player').setScale(5)
       this.player.setBounce(0.2)
-      .setPosition(300,0)
       .setFrictionX(0)
 
       this.player.depth = 10
-      
+      this.player.play('stay')
       this.cameras.main.startFollow(this.player, true, 0.05, 0.05);
       this.cameras.main.followOffset.set(0, 130);
 
@@ -77,9 +102,10 @@ class MainScene extends Phaser.Scene
       this.slipperyPlatforms = this.physics.add.staticGroup()
       this.platforms = this.physics.add.staticGroup({
         key: 'ground',
-        repeat: 19,
-        setXY: { x: 15, y: 31, stepX: 30 },
+        repeat: 4,
+        setXY: { x: 15, y: 37, stepX: 180 },
       })
+      this.add.image(0,40,'ground_fill').setOrigin(0).setDepth(1)
       
       for(let x =0;x<20;x++){
         this.platform_create(1,'common')
@@ -93,6 +119,8 @@ class MainScene extends Phaser.Scene
       }
       
       this.input.on('pointerdown',function(){
+        this.player.play('prejump')
+
         this.pointerX1 = this.pointer.x
         this.pointerY1 = this.pointer.y
         this.checker2 = true
@@ -101,6 +129,9 @@ class MainScene extends Phaser.Scene
         let angle = Math.round(Math.atan( (this.pointer.y-this.pointerY1) / (this.pointer.x-this.pointerX1) ) * 180 / Math.PI)
         if(!isNaN(angle) && this.player.body.touching.down && this.checker2 == true){
           this.checker2 = false
+          
+          this.player.play('jump')
+
           if(this.pointer.x<=this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 180+angle
             this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
@@ -148,16 +179,19 @@ class MainScene extends Phaser.Scene
 
     }
     generator(platform){
+
       let chance =  Math.floor(Math.random() * 10)
       if(chance<=5){
         if(platform.getData('counter')>0){
           this.platform_create(2,'slippery')
           platform.setData('counter',0)
+
         }
       }else{
         if(platform.getData('counter')>0){
           this.platform_create(2,'common')
           platform.setData('counter',0)
+
         }
         
       }
@@ -175,7 +209,6 @@ class MainScene extends Phaser.Scene
           this.platforms.create(x,0-this.height,'ground')
           .setDepth(1)
           .setData('counter',1)
-          .setScale(6,1)
           .refreshBody()
           this.platforms.getChildren().at(-1).body.checkCollision.down = false
           this.platforms.getChildren().at(-1).body.checkCollision.left = false
@@ -188,7 +221,6 @@ class MainScene extends Phaser.Scene
           this.slipperyPlatforms.create(x,0-this.height,'ice')
           .setDepth(1)
           .setData('counter',1)
-          .setScale(6,1)
           .refreshBody()
           this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.down = false
           this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.left = false
@@ -204,14 +236,14 @@ class MainScene extends Phaser.Scene
     update(){
       // stars ----
       if(this.player.body.velocity.y>1){
-        this.stars.children.each(function(stars){
-          stars.y -=this.player.body.velocity.y*0.001
-          stars.refreshBody().setDepth(0)
+        this.stars.children.each(function(star){
+          star.y -=this.player.body.velocity.y*0.001
+          star.refreshBody().setDepth(0)
         },this)
       }else if(this.player.body.velocity.y<-1){
-        this.stars.children.each(function(stars){
-          stars.y -=this.player.body.velocity.y*0.001
-          stars.refreshBody().setDepth(0)
+        this.stars.children.each(function(star){
+          star.y -=this.player.body.velocity.y*0.001
+          star.refreshBody().setDepth(0)
         },this)
       }
       // ----
@@ -227,7 +259,9 @@ class MainScene extends Phaser.Scene
       if(!this.player.body.touching.down){
         this.player.setDragX(0)
       }
-
+      if(this.player.body.touching.down && this.player.anims.getName()!='stay' && !game.input.activePointer.isDown){
+        this.player.play('stay')
+      }
       if(this.keyR.isDown){
         this.scene.restart("MainScene")
       }
