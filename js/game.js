@@ -6,15 +6,13 @@ var config = {
   physics: {
     // default: 'matter',
     arcade: {
-      debug: true,
+      debug: false,
       gravity: { y: 0,x: 0 }
     },
     matter: {
       gravity: {x:0,y:0},
-      debug: true,
-      plugins: {
-        wrap: true
-      },
+      debug: false,
+      
     },
   }, 
   scene: [

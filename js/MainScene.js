@@ -4,11 +4,11 @@ class MainScene extends Phaser.Scene
       super({ key: "MainScene",
       physics: {
         arcade: {
-            debug: true,
+            debug: false,
             gravity: { y: 300 }
         },
         matter: {
-            debug: true,
+            debug: false,
         }
     } });
     }
@@ -18,6 +18,8 @@ class MainScene extends Phaser.Scene
     }
     preload(){
       this.load.image('ground',"assets/ground.png");
+      this.load.image('ice',"assets/ice.png");
+
       this.load.image('sprite_player', 'assets/slime.png');
       this.load.image('background','assets/background.png')
       this.load.image('deadzone','assets/deadzone.png')
@@ -52,10 +54,11 @@ class MainScene extends Phaser.Scene
 
       this.player.depth = 10
       
-      this.deadzone = this.physics.add.image(0,this.player.y+700,'deadzone').setDepth(11).setScale(10,1).setOrigin(0)
-      this.deadzone.body.allowGravity = false
       this.cameras.main.startFollow(this.player, true, 0.05, 0.05);
       this.cameras.main.followOffset.set(0, 130);
+
+      this.deadzone = this.physics.add.image(0,this.player.y+700,'deadzone').setDepth(11).setScale(10,1).setOrigin(0)
+      this.deadzone.body.allowGravity = false
 
 
       this.checker = true
@@ -65,23 +68,17 @@ class MainScene extends Phaser.Scene
       this.maxScore = 0
       this.playerHeight = this.player.displayHeight
       this.gameWidth, this.gameHeiht = this.sys.game.canvas
-      this.keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-      this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-      this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-      this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-      this.keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
       this.keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
       this.keyESC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
       this.pointer = this.input.activePointer;
       this.pointerX1
       this.pointerY1
-      console.log(this.player)
       this.slipperyPlatforms = this.physics.add.staticGroup()
       this.platforms = this.physics.add.staticGroup({
         key: 'ground',
         repeat: 19,
-        setXY: { x: 15, y: 28, stepX: 30 },
+        setXY: { x: 15, y: 31, stepX: 30 },
       })
       
       for(let x =0;x<20;x++){
@@ -125,7 +122,7 @@ class MainScene extends Phaser.Scene
         // Friction ----
         this.player.setDragX(1000);
         // ----
-       this.onceCreator(platform)
+       this.generator(platform)
         
       }, null, this);
       this.physics.add.collider(this.player,this.slipperyPlatforms,function(player,platform){
@@ -133,29 +130,24 @@ class MainScene extends Phaser.Scene
         this.player.setDragX(20);
         // ----
 
-        this.onceCreator(platform)
+        this.generator(platform)
 
       },null, this)
       this.physics.add.overlap(this.deadzone,this.stars,function(deadzone,star){
         star.destroy()
       },null,this)
       this.physics.add.overlap(this.deadzone,this.player,function(deadzone,player){
-        
-        // player.destroy()
-        
         this.scene.start('GameOverScene',{data: this.maxScore});
-
-
       },null,this)
       this.physics.add.overlap(this.deadzone,this.platforms,function(deadzone,platform){
         platform.destroy()
 
       },null,this)
 
-      this.text = this.add.text(10, 10, 'Cursors to move', { font: '16px Courier', fill: '#00ff00' }).setScrollFactor(0);
+      this.text = this.add.text(10, 10, '...', { font: '16px Courier', fill: '#00ff00' }).setScrollFactor(0)
 
     }
-    onceCreator(platform){
+    generator(platform){
       let chance =  Math.floor(Math.random() * 10)
       if(chance<=5){
         if(platform.getData('counter')>0){
@@ -193,10 +185,9 @@ class MainScene extends Phaser.Scene
           this.createStar(this.randomInteger(20,580),this.randomInteger(-this.height-50,-this.height+50))
 
         }else if(group == 'slippery'){
-          this.slipperyPlatforms.create(x,0-this.height,'ground')
+          this.slipperyPlatforms.create(x,0-this.height,'ice')
           .setDepth(1)
           .setData('counter',1)
-          .setTint(0x0000ff)
           .setScale(6,1)
           .refreshBody()
           this.slipperyPlatforms.getChildren().at(-1).body.checkCollision.down = false
@@ -206,8 +197,6 @@ class MainScene extends Phaser.Scene
           this.createStar(this.randomInteger(20,580),this.randomInteger(-this.height-50,-this.height+50))
 
         }
-        
-        
         this.height += 100
       }
     }
@@ -223,17 +212,10 @@ class MainScene extends Phaser.Scene
         this.stars.children.each(function(stars){
           stars.y -=this.player.body.velocity.y*0.001
           stars.refreshBody().setDepth(0)
-
         },this)
       }
-      this.stars.children.each(function(stars){
-        if(stars.y<this.player.y+1000){
-          stars
-        }
-      },this)
       // ----
-      // deadzone ----
-      // ----
+     
       // wrap -----
       if(this.player.x <= 0 - this.player.width){
         this.player.setPosition( 600 + this.player.width - 1 ,this.player.y)
@@ -241,20 +223,18 @@ class MainScene extends Phaser.Scene
         this.player.setPosition(0 - this.player.width + 1 ,this.player.y)
       }
       // -----
+
       if(!this.player.body.touching.down){
         this.player.setDragX(0)
       }
 
-      if(this.keyE.isDown){
-        console.log(this.platforms.getChildren().length)
-      }
       if(this.keyR.isDown){
         this.scene.restart("MainScene")
       }
       if(this.keyESC.isDown){
         this.scene.start('MainMenuScene');
-        
       }
+
       this.cameras.main.setBounds(0, this.player.y-600, 600, 1200)
       this.matter.world.setBounds(0, this.player.y+800, 600, 1800)
 
