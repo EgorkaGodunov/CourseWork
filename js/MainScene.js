@@ -5,7 +5,7 @@ class MainScene extends Phaser.Scene
       physics: {
         arcade: {
             debug: false,
-            gravity: { y: 300 }
+            gravity: { y: 400 }
         },
         matter: {
             debug: false,
@@ -35,7 +35,7 @@ class MainScene extends Phaser.Scene
     }
     
     create() {
-      const configStar = {
+    const configStar = {
         key: 'blic',
         frames: this.anims.generateFrameNumbers('star'),
         frameRate: 3,
@@ -92,7 +92,6 @@ class MainScene extends Phaser.Scene
       this.score = 0
       this.maxScore = 0
       this.playerHeight = this.player.displayHeight
-      this.gameWidth, this.gameHeiht = this.sys.game.canvas
       this.keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
       this.keyESC = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
@@ -134,10 +133,10 @@ class MainScene extends Phaser.Scene
 
           if(this.pointer.x<=this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 180+angle
-            this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
+            this.physics.velocityFromAngle(angle, 450, this.player.body.velocity);
           }else if(this.pointer.x >= this.pointerX1 && this.pointerY1 >=this.pointer.y){
             angle = 360+angle
-            this.physics.velocityFromAngle(angle, 400, this.player.body.velocity);
+            this.physics.velocityFromAngle(angle, 450, this.player.body.velocity);
 
           }
         }
@@ -250,8 +249,8 @@ class MainScene extends Phaser.Scene
      
       // wrap -----
       if(this.player.x <= 0 - this.player.width){
-        this.player.setPosition( 600 + this.player.width - 1 ,this.player.y)
-      }else if(this.player.x >= 600 + this.player.width){
+        this.player.setPosition( this.game.config.width + this.player.width - 1 ,this.player.y)
+      }else if(this.player.x >= this.game.config.width + this.player.width){
         this.player.setPosition(0 - this.player.width + 1 ,this.player.y)
       }
       // -----
